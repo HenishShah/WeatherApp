@@ -30,6 +30,7 @@ import com.example.weatherapp.viewmodel.UserListViewModel
 
 @Composable
 fun UserInputDialog(
+    viewModel: UserListViewModel = hiltViewModel(),
     onDismissRequest: () -> Unit,
     onConfirm: (String, String, String) -> Unit
 ) {
@@ -37,7 +38,6 @@ fun UserInputDialog(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
 
-    val viewModel: UserListViewModel = hiltViewModel()
     val userListState by viewModel.userListState.collectAsState()
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
@@ -125,8 +125,7 @@ fun UserInputDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = {
-                        viewModel.onAddUserClicked(email, firstName, lastName, onConfirm)
-                        onDismissRequest()
+                        viewModel.onAddUserClicked(email, firstName, lastName, onConfirm, onDismissRequest)
                     }) {
                         Text("Add")
                     }

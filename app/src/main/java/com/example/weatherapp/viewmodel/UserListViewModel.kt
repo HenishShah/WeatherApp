@@ -12,27 +12,28 @@ class UserListViewModel @Inject constructor() : ViewModel() {
     private val _userListState = MutableStateFlow(UserListState(null, null, null))
     val userListState: StateFlow<UserListState> = _userListState
 
-    fun onAddUserClicked(email: String, firstName: String, lastName: String, onConfirm: (String, String, String) -> Unit) {
+    fun onAddUserClicked(email: String, firstName: String, lastName: String, onConfirm: (String, String, String) -> Unit, onDismiss: () -> Unit) {
         val emailError =
             if (email.trim().isEmpty()) "Email cannot be empty"
             else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Invalid email address"
-            else ""
+            else null
 
         val firstNameError =
             if (firstName.trim().isEmpty()) "First name cannot be empty"
-            else ""
+            else null
 
         val lastNameError =
             if (lastName.trim().isEmpty()) "Last name cannot be empty"
-            else ""
+            else null
 
-        if (emailError.isEmpty() && firstNameError.isEmpty() && lastNameError.isEmpty()) {
-            onConfirm(firstName, lastName, email)
+        if (emailError.isNullOrEmpty() && firstNameError.isNullOrEmpty() && lastNameError.isNullOrEmpty()) {
             _userListState.value = _userListState.value.copy(
-                emailError = null,
-                firstNameError = null,
-                lastNameError = null
+                emailError = emailError,
+                firstNameError = firstNameError,
+                lastNameError = lastNameError
             )
+            onConfirm(firstName, lastName, email)
+            onDismiss()
         } else {
             _userListState.value = _userListState.value.copy(
                 emailError = emailError,
