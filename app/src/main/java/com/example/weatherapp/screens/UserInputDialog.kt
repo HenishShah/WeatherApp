@@ -15,15 +15,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.weatherapp.viewmodel.UserListViewModel
 
 @Composable
 fun UserInputDialog(
@@ -34,9 +37,8 @@ fun UserInputDialog(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
 
-    var emailError by remember { mutableStateOf("") }
-    var firstNameError by remember { mutableStateOf("") }
-    var lastNameError by remember { mutableStateOf("") }
+    val viewModel: UserListViewModel = hiltViewModel()
+    val userListState by viewModel.userListState.collectAsState()
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Surface(
@@ -60,14 +62,14 @@ fun UserInputDialog(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email") },
-                    isError = emailError.isNotEmpty(),
+                    isError = !userListState.emailError.isNullOrEmpty(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
-                if (emailError.isNotEmpty()) {
+                if (!userListState.emailError.isNullOrEmpty()) {
                     Text(
-                        text = emailError,
+                        text = userListState.emailError!!,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp
                     )
@@ -78,14 +80,14 @@ fun UserInputDialog(
                 OutlinedTextField(
                     value = firstName,
                     onValueChange = { firstName = it },
-                    isError = firstNameError.isNotEmpty(),
+                    isError = !userListState.firstNameError.isNullOrEmpty(),
                     singleLine = true,
                     label = { Text("First Name") },
                 )
 
-                if (firstNameError.isNotEmpty()) {
+                if (!userListState.firstNameError.isNullOrEmpty()) {
                     Text(
-                        text = firstNameError,
+                        text = userListState.firstNameError!!,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp
                     )
@@ -97,14 +99,16 @@ fun UserInputDialog(
                     value = lastName,
                     onValueChange = { lastName = it },
                     label = { Text("Last Name") },
-                    isError = lastNameError.isNotEmpty(),
+                    isError = !userListState.lastNameError.isNullOrEmpty(),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
 
-                if (lastNameError.isNotEmpty()) {
+                if (!userListState.lastNameError.isNullOrEmpty()) {
                     Text(
-                        text = lastNameError,
+                        text = userListState.lastNameError!!,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp
                     )
@@ -121,23 +125,8 @@ fun UserInputDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = {
-                        emailError =
-                            if (email.trim().isEmpty()) "Email cannot be empty"
-                            else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Invalid email address"
-                            else ""
-
-                        firstNameError =
-                            if (firstName.trim().isEmpty()) "First name cannot be empty"
-                            else ""
-
-                        lastNameError =
-                            if (lastName.trim().isEmpty()) "Last name cannot be empty"
-                            else ""
-
-                        if (emailError.isEmpty() && firstNameError.isEmpty() && lastNameError.isEmpty()) {
-                            onConfirm(firstName.trim(), lastName.trim(), email.trim())
-                            onDismissRequest()
-                        }
+                        viewModel.onAddUserClicked(email, firstName, lastName, onConfirm)
+                        onDismissRequest()
                     }) {
                         Text("Add")
                     }

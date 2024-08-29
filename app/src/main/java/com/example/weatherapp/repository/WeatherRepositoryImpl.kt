@@ -5,11 +5,8 @@ import com.example.weatherapp.domain.WeatherRepository
 import com.example.weatherapp.model.WeatherModel
 import com.example.weatherapp.retrofit.ApiService
 import org.json.JSONObject
-import retrofit2.Response
-import javax.inject.Inject
-import javax.inject.Singleton
 
-class WeatherRepositoryImpl(private val apiService: ApiService):
+class WeatherRepositoryImpl(private val apiService: ApiService) :
     WeatherRepository {
     override suspend fun getWeatherDetails(): Result<WeatherModel> {
         return try {

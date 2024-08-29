@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.weatherapp.common.DataState
 import com.example.weatherapp.model.WeatherModel
 import com.example.weatherapp.viewmodel.LoginViewModel
 import com.example.weatherapp.viewmodel.WeatherViewModel
@@ -41,10 +42,7 @@ fun WeatherDetailScreen(
     loginViewModel: LoginViewModel,
     onBackClick: () -> Unit
 ) {
-
-    val showLoader by weatherViewModel.showLoader.collectAsState()
-    val weatherModel by weatherViewModel.weatherDetails.collectAsState()
-    val error by weatherViewModel.error.collectAsState()
+    val dataState by weatherViewModel.dataState.collectAsState()
 
     LaunchedEffect(Unit) {
         weatherViewModel.fetchWeatherDetails()
@@ -53,7 +51,9 @@ fun WeatherDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(title = {
-                Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)) {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
@@ -78,85 +78,89 @@ fun WeatherDetailScreen(
             })
         },
         content = { paddingValues ->
-            if (showLoader) {
-                Box(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(paddingValues)
-                            .size(25.dp)
-                            .align(Alignment.Center),
-                        color = MaterialTheme.colors.primary
-                    )
-                }
-
-            } else {
-                WeatherDetails(weatherModel, error, paddingValues)
-            }
+            WeatherDetails(dataState, paddingValues)
         }
     )
 }
 
 @Composable
 fun WeatherDetails(
-    weatherModel: WeatherModel? = null,
-    error: String? = null,
+    dataState: DataState<WeatherModel?>,
     paddingValues: PaddingValues
 ) {
-    if (error != null && error.isNotEmpty()) {
-        Box(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize(),
-        )
-        Text(
-            text = error,
-            color = MaterialTheme.colors.error,
-            textAlign = TextAlign.Center
-        )
-    } else {
-        if (weatherModel != null) {
-            Card(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(8.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Temperature: ${weatherModel.temp}°C",
-                        style = MaterialTheme.typography.h6
-                    )
-                    Text(
-                        text = "Weather: ${weatherModel.weatherType}",
-                        style = MaterialTheme.typography.body1
-                    )
-                    Text(
-                        text = "Humidity: ${weatherModel.humidity}%",
-                        style = MaterialTheme.typography.body1
-                    )
-                    Text(
-                        text = "Wind Speed: ${weatherModel.windSpeed} m/s",
-                        style = MaterialTheme.typography.body1
-                    )
+    when (dataState) {
+        is DataState.Success -> {
+            if (dataState.data != null) {
+                Card(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(8.dp)
+                ) {
+
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Temperature: ${dataState.data.temp}°C",
+                            style = MaterialTheme.typography.h6
+                        )
+                        Text(
+                            text = "Weather: ${dataState.data.weatherType}",
+                            style = MaterialTheme.typography.body1
+                        )
+                        Text(
+                            text = "Humidity: ${dataState.data.humidity}%",
+                            style = MaterialTheme.typography.body1
+                        )
+                        Text(
+                            text = "Wind Speed: ${dataState.data.windSpeed} m/s",
+                            style = MaterialTheme.typography.body1
+                        )
+                    }
                 }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
+                )
+                Text(
+                    text = "No Data Found",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
             }
-        } else {
+        }
+
+        is DataState.Error -> {
             Box(
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize(),
             )
             Text(
-                text = "No Data Found",
-                color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                text = dataState.message,
+                color = MaterialTheme.colors.error,
                 textAlign = TextAlign.Center
             )
         }
+
+        is DataState.Loading -> {
+            Box(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .size(25.dp)
+                        .align(Alignment.Center),
+                    color = MaterialTheme.colors.primary
+                )
+            }
+        }
+
     }
 
 }

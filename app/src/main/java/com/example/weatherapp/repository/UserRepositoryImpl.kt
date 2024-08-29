@@ -4,10 +4,8 @@ import com.example.weatherapp.domain.UserRepository
 import com.example.weatherapp.model.UserModel
 import com.example.weatherapp.room.UserDao
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
-class UserRepositoryImpl (private val userDao: UserDao): UserRepository {
+class UserRepositoryImpl(private val userDao: UserDao) : UserRepository {
 
     override suspend fun insertUser(userModel: UserModel) {
         userDao.insert(userModel)
